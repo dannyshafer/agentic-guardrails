@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentic-guardrails"
+version = "0.3.0"
+description = "Let an AI agent trade your brokerage account without it hurting you: guards, a dead-man gate, idempotent orders, reconcile, and an assignment guard for options execution."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = []
+
+[project.optional-dependencies]
+robinhood = ["httpx>=0.27"]
+rest = ["httpx>=0.27"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "httpx>=0.27", "ruff"]
+
+[tool.setuptools]
+packages = ["agentic_guardrails", "agentic_guardrails.runtime", "agentic_guardrails.brokers"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
