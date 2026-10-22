@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentic-guardrails"
-version = "0.3.0"
+version = "0.4.0"
 description = "Let an AI agent trade your brokerage account without it hurting you: guards, a dead-man gate, idempotent orders, reconcile, and an assignment guard for options execution."
 readme = "README.md"
 requires-python = ">=3.12"

@@ -17,8 +17,19 @@ from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Protocol
 
 from agentic_guardrails.broker import BrokerAuthExpired, BrokerMalformed, BrokerRejected, BrokerTimeout, BrokerTransient
+from agentic_guardrails.runtime.ratelimit import is_quota_violation_body, retry_after_seconds
+from agentic_guardrails.venue_errors import ORDER_LEVEL_REJECTS, classify_reject
 
 logger = logging.getLogger("options_executor.rest")
+
+
+class BrokerThrottled(BrokerTransient):
+    """A rate limit or 5xx with the venue's own retry delay attached, so a caller can sleep the
+    right amount without parsing the message. Still a `BrokerTransient` to the engine."""
+
+    def __init__(self, msg: str, retry_after: float) -> None:
+        super().__init__(msg)
+        self.retry_after = retry_after
 
 
 @dataclass(frozen=True)
@@ -109,9 +120,18 @@ def raise_for(resp: RestResponse, what: str, *, placing: bool = False) -> None:
     if resp.ok:
         return
     if resp.status in (401, 403):
+        # One venue's 403 is a REJECT with a reason, not an auth failure: route by the text.
+        if resp.status == 403 and placing and classify_reject(_short(resp.body)).cls in ORDER_LEVEL_REJECTS:
+            raise BrokerRejected(f"{what}: HTTP {resp.status} {_short(resp.body)}")
         raise BrokerAuthExpired(f"{what}: HTTP {resp.status} {_short(resp.body)}")
-    if resp.status == 429 or resp.status >= 500:
-        raise BrokerTransient(f"{what}: HTTP {resp.status} {_short(resp.body)}")
+    if placing and resp.status >= 500:
+        # A 5xx on a PLACE is ambiguous: the venue may have accepted the order before failing.
+        # Plain BrokerTransient, no retry hint: the engine parks it UNKNOWN and looks it up.
+        raise BrokerTransient(f"{what}: HTTP {resp.status} {_short(resp.body)} (order may have landed; reconcile, never retry)")
+    if resp.status == 429 or resp.status >= 500 or is_quota_violation_body(resp.status, resp.body):
+        # A throttled request (or a 5xx on a read) never rested an order; the delay comes from the headers.
+        wait = retry_after_seconds(resp.headers)
+        raise BrokerThrottled(f"{what}: HTTP {resp.status} {_short(resp.body)} (retry after {wait:.0f}s)", wait)
     if placing:
         raise BrokerRejected(f"{what}: HTTP {resp.status} {_short(resp.body)}")
     raise BrokerMalformed(f"{what}: HTTP {resp.status} {_short(resp.body)}")

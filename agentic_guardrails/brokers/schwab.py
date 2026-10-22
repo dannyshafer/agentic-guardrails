@@ -199,7 +199,7 @@ class SchwabBroker:
         return self._by_client.get(client_order_id)
 
     async def min_tick(self, contract_symbol: str, price: Decimal) -> Decimal:
-        return c.nickel_grid(price)
+        return c.tick_for(contract_symbol, price)
 
     def _to_order(self, rec: dict, boid: str) -> BrokerOrder:
         if str(c.get(rec, "orderId", default=boid)) != str(boid):

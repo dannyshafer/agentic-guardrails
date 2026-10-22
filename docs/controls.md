@@ -98,6 +98,27 @@ recorded quote no longer matches the live one.
   nothing. It paid for itself on its first run: its own ledger check was a no-op because of an
   import the container did not have.
 
+## Venue-failure guards (`venue_errors.py`, `runtime/calendar.py`, `freshness.py`, `expiry.py`, `auth_lease.py`, `instance.py`, `close_sizing.py`, `adopt.py`, `ratelimit.py`, `book_check.py`)
+
+Built from other people's reported incidents rather than ours; `docs/venue_failure_modes.md`
+maps each to its source. They are pure functions a loop calls at the points named below.
+
+- **Before the loop starts:** `InstanceLock` (one process per machine; a cross-host lease is yours to add), `mode_mismatch_reason` (the host
+  matches the declared mode), `assert_calendar_covers` (the holiday table reaches today).
+- **Before every open:** `market_open`, `no_open_reason` (expiry day), `quote_lag_reason` (the
+  quote is fresh), `lease_open_blocked_reason` (the credential outlives the guard horizon),
+  `opens_blocked_tickers` from the last `check_book` (no shorts on a name with unexplained equity).
+- **On every reject:** `classify_reject`; a HALT_OPENS policy is sticky for the session, a
+  CANCEL_RESTING_FIRST policy means cancel, re-read the position, re-plan, never retry as is.
+- **On every close:** `closable_qty` from the broker's position; `resting_opposite_in_the_way`
+  first. On expiry day, `pin_risk_reason` before the venue's risk desk acts.
+- **On a place that returned no id:** `match_unidentified`; ambiguity stays UNKNOWN.
+- **After the close on expiry day:** nothing is booked until `expiry_settled_at`.
+- **Costs:** the calendar table needs extending each year (it halts past its end, by design); the
+  reject patterns need a new line when a venue invents a message (unknown text is a terminal
+  reject, the safe direction); the frozen-feed detector needs a few symbols before it can tell a
+  dead feed from a quiet contract.
+
 ## What is deliberately not here
 
 No stop-loss on short premium or on spreads (measured as net negative at every level: the

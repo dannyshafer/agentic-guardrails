@@ -20,7 +20,7 @@ happen:
 - a fault-injection `SimBroker` so every rule above is tested offline, plus the Robinhood MCP
   adapter that has survived the live API's typing quirks.
 
-Status: v0.3.0. The core, the file-backed stores (`SqliteLedger`, `JsonFileHealthStore`), a
+Status: v0.4.0. The core, the file-backed stores (`SqliteLedger`, `JsonFileHealthStore`), a
 user-supplied `FactorMap`, the typed `GuardrailConfig`, the runtime layer
 (`agentic_guardrails.runtime`: kill states for opens vs protective closes, the open-side vetting
 floors, a two-feed spot, the broker-truth fill audit, the controls drill, the assignment-guard
@@ -116,6 +116,30 @@ environment the way the CLI does, pass both: `build_broker(config_from_env(),
 tools=tools_from_env())`, where `tools_from_env` overrides one verb at a time
 (`AG_RH_TOOL_QUOTE`, ...). Build it once per process: it holds the MCP session and the
 instrument caches.
+
+## Guards built from other people's incidents
+
+The nine stories above are ours. [`docs/venue_failure_modes.md`](docs/venue_failure_modes.md)
+collects what other people report hitting on Schwab, tastytrade, Tradier, IBKR and Alpaca, with
+sources, and names the guard here for each. The short version:
+
+| reported failure | guard |
+|---|---|
+| A reject hidden in free text behind one numeric code (buying power, wash trade, PDT, option level, quantity held, tick size) | `venue_errors.classify_reject`: a class and a policy (retry, stand down, cancel resting first, halt opens, fix the order) |
+| IBKR's numbered errors: noise, stale data, pacing, a cancel that raced a fill | `venue_errors.classify_ibkr` |
+| A rate limit reported as HTTP 400 plain text; a 403 that is a reject, not an auth failure | `brokers/rest.raise_for` routes both |
+| A refresh token that hard-expires on a clock and then looks like a bad secret | `runtime/auth_lease`: warnings ahead, and no new short the credential cannot guard to the next open |
+| A bot that ran on a holiday, or keyed its day on server UTC | `runtime/calendar`: ET sessions, holidays, early closes, naive datetimes refused |
+| A quote feed that froze while the socket said connected | `runtime/freshness`: quote age per order, frozen-feed detection across symbols |
+| An expiring short assigned after hours, a risk desk closing pinned legs mid-afternoon | `runtime/expiry`: no late opens, close pinned shorts first, nothing booked until the exercise cutoff |
+| Equity appearing in an options-only book, positions the ledger never saw | `runtime/book_check` |
+| A close larger than the position, or blocked by a resting opposite order | `runtime/close_sizing` |
+| A place that timed out after the venue accepted it, on a venue with no client order id | `runtime/adopt`: match by tag, else by shape; two matches stay UNKNOWN |
+| Two copies of the bot on one machine; a sandbox token against the production host | `runtime/instance`: lock file (one host; a cross-host lease is yours) and mode/host check |
+| Index options on a nickel grid; a one-cent bid nobody can see | `brokers/_common.tick_for`, `sub_display_min_reason` |
+
+Each is pure and opt-in: wire the ones your loop needs. None of these touch the engine's
+decision path; they feed it.
 
 ## Install
 

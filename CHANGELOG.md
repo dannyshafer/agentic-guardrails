@@ -3,6 +3,29 @@
 All notable changes to this package. The format follows Keep a Changelog; versions follow SemVer.
 Until 1.0 a minor version may change an interface, and the entry here says so when it does.
 
+## 0.4.0 (2026-10-22)
+
+Guards built from field-reported venue failures (see `docs/venue_failure_modes.md`, with sources).
+Nothing in the engine's decision path changed; every addition is a pure helper a loop opts into.
+
+- `venue_errors.classify_reject`: cross-venue reject text to a class and a policy;
+  `classify_ibkr` for IBKR numbered errors.
+- `brokers/rest.raise_for`: a 403 carrying reject text is `BrokerRejected`, not auth; a quota
+  violation sent as HTTP 400 is `BrokerTransient`; transient errors carry the retry delay.
+- `brokers/_common.tick_for` (index nickel grid) and `sub_display_min_reason`.
+- `runtime/calendar`: ET sessions, holidays and early closes through the end of next year,
+  naive datetimes refused, `bar_is_current`.
+- `runtime/freshness`: `quote_lag_reason` and `FrozenFeedDetector`.
+- `runtime/expiry`: `no_open_reason`, `pin_risk_reason`, `assignment_window_open`,
+  `expiry_settled_at`, `ex_dividend_assignment_reason`.
+- `runtime/auth_lease`: `Lease` with documented venue lifetimes, tiered warnings,
+  `open_blocked_reason` against a guard horizon.
+- `runtime/instance`: `InstanceLock`, `mode_mismatch_reason`.
+- `runtime/close_sizing`: `closable_qty`, `resting_opposite_in_the_way`.
+- `runtime/adopt`: `match_unidentified` for venues without a client order id.
+- `runtime/ratelimit`: per-venue budgets, `TokenBucket`, `retry_after_seconds`, `backoff_seconds`.
+- `runtime/book_check`: unexpected equity, orphan options, non-tradable holdings.
+
 ## 0.3.0 (2026-10-22)
 
 - `EngineConfig.factors` takes a `FactorModel` (`factor_of`, `earnings_underlier`,

@@ -160,7 +160,7 @@ class AlpacaBroker:
         return str(c.get(body_dict(r, "find"), "id"))
 
     async def min_tick(self, contract_symbol: str, price: Decimal) -> Decimal:
-        return c.nickel_grid(price)
+        return c.tick_for(contract_symbol, price)
 
     def _to_order(self, rec: dict, want: str | None) -> BrokerOrder:
         boid = str(c.get(rec, "id"))
