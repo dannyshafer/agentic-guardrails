@@ -1,4 +1,4 @@
-"""Executor health record: what the dead-man gate reads (Sep 6, 2026).
+"""Executor health record: what the dead-man gate reads.
 
 `selftest.run_probe` + `selftest.evaluate` decide PASS/FAIL, and
 `killswitch.deadman_gate` refuses to arm unless the last PASS is RECENT. Between

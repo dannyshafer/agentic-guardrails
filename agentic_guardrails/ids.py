@@ -43,7 +43,7 @@ def broker_ref_id(client_order_id: str) -> str:
     """The broker-facing idempotency token derived from our client_order_id.
 
     The Robinhood MCP place endpoint began rejecting a non-UUID ref_id (observed
-    Oct 2026: 'ref_id must be a UUID (got "sat_..."'), which silently blocked
+    'ref_id must be a UUID (got "sat_..."'), which silently blocked
     every live open AND every assignment-guard protective close. This maps our
     stable sat_* id to a deterministic UUID5, so the broker sees a valid UUID
     while the id stays the same identity across a reprice/restart (same coid ->

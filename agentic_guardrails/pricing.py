@@ -62,7 +62,7 @@ def limit_for(intent: OrderIntent, quote: Quote, *, k: Decimal = Decimal(1), tar
     raise ValueError(f"no pricing rule for intent {intent}")
 
 
-# ── Vertical put credit spreads (Phase 2, Sep 16 2026) ───────────────────────
+# ── Vertical put credit spreads (Phase 2) ─────────────────────────────────────
 # The paper book records a spread at BID-CROSS-ASK (short.bid - long.ask, both
 # legs at the worst executable side; options_chain.select_put_spread). k=1
 # lands the net limit exactly there, so a live fill at the limit makes the paper

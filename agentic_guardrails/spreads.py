@@ -1,8 +1,8 @@
-"""Vertical put credit spreads: the pure plan builder (Phase 2, Sep 16 2026).
+"""Vertical put credit spreads: the pure plan builder (Phase 2).
 
-Why spreads: docs/findings/2026-09-10_saturn_spreads_capital_year.md. The same
+Why spreads: the capital-year replay of the validated entries. The same
 entries earn ~32% ROC per capital-year as verticals vs ~8% as cash-secured puts,
-and at the $9k Agentic pool no index CSP ever fits while a TQQQ 10%-wing vertical
+and on a small pool no index CSP ever fits while a TQQQ 10%-wing vertical
 does ($660 of collateral). The tail is fat and CLUSTERED (max losses arrive in
 bunches in a bear), so the binding control is CONCURRENCY (3-4 open at once),
 enforced by `guards.guard_spread_concurrency`, not the entry gate.

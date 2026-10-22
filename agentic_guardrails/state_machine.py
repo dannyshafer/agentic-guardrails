@@ -93,7 +93,7 @@ def apply_broker_status(view: OrderView, read: BrokerOrder) -> OrderView:
     - filled_qty only ever INCREASES: keep the largest quantity ever seen. A
       cancel does not stop fills already in flight, so a read that reports a
       smaller filled_qty than we already booked is stale and must not shrink our
-      size (the slow-fill-after-cancel class, Aug 24). The fill price is kept
+      size (the slow-fill-after-cancel class). The fill price is kept
       from the read whose filled_qty set the high-water mark.
     - a cancel is NOT terminal while quantity is still filling: if the broker
       reports CANCELED but its filled_qty exceeds what we had, we advance the

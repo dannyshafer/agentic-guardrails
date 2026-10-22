@@ -215,7 +215,7 @@ class SimBroker:
 
 # ── The real broker: Robinhood Agentic Trading MCP ────────────────────────────
 #
-# SURFACE VERIFIED against the live MCP (Sep 9 2026 Phase-0 discovery), with ONE
+# SURFACE VERIFIED against the live MCP (Phase-0 discovery), with ONE
 # exception noted at `_LEG_OPTION_KEY`. The shapes this class parses:
 #   - every response is enveloped `{data: <payload>, guide: <chatbot text>}`;
 #     `_data()` unwraps it and the `guide` field is ignored.
@@ -387,7 +387,7 @@ def _records_from_dict(payload: dict, list_keys: tuple[str, ...]) -> list[dict]:
         if isinstance(v, list):
             return _as_object_list(v, f"{k} list has a non-object entry")
         # A SINGULAR keyed object, e.g. place_option_order returns
-        # {"data":{"order":{...}}} (verified live Sep 10 2026). Treat a
+        # {"data":{"order":{...}}} (verified live). Treat a
         # dict-valued key as one record — without this it fell through to
         # `return [payload]` (the WRAPPER {"order":{...}}), whose top level
         # has no id/state, so a filled place read as UNKNOWN with no
@@ -470,7 +470,7 @@ def _realized_fill_price(rec: dict, filled: int) -> Decimal | None:
     """Per-share price the order actually EXECUTED at, never the limit.
 
     Robinhood fills a marketable limit at the better price (a 0.34 STO limit
-    filled at 0.40 on Sep 25 2026), and ``price`` echoes the LIMIT, so booking
+    filled at 0.40), and ``price`` echoes the LIMIT, so booking
     it understated realized P&L. ``processed_premium`` is the executed dollars
     (net for a multi-leg), so premium / (filled x multiplier) is the true
     per-share fill; next the leg executions; the limit only as a last resort."""
@@ -577,7 +577,7 @@ class RobinhoodMCPBroker:
     async def min_tick(self, contract_symbol: str, price: Decimal) -> Decimal:
         """The contract's price increment at `price` (Robinhood `min_ticks`:
         below_tick under cutoff_price, above_tick at or over it). NVDX trades in
-        nickels under $3 while NVDL/TQQQ trade in pennies (read live Sep 24 2026),
+        nickels under $3 while NVDL/TQQQ trade in pennies (read live),
         so a resting limit must be rounded per contract or the venue refuses it.
         An unreadable tick falls back to the coarse nickel/dime grid, which is
         valid on every listed option."""
@@ -734,7 +734,7 @@ class RobinhoodMCPBroker:
         iid = await self._instrument_id(plan.contract_symbol)
         side, effect = _INTENT_LEG[plan.intent]
         # Robinhood's option-order schema is MIXED-typed (both verified live
-        # Sep 10 2026 via review_option_order -32602 errors): the top-level
+        # via review_option_order -32602 errors): the top-level
         # `quantity` must be a STRING ("type: 1 has type integer, want string"),
         # but the leg's `ratio_quantity` must be an INTEGER ("has type string,
         # want integer"). price is a string, as before.
@@ -754,7 +754,7 @@ class RobinhoodMCPBroker:
             "quantity": str(plan.quantity),
             "price": str(plan.limit_price),
             # Day order by default. A resting take-profit close asks for "gtc"
-            # (review accepted it live Sep 24 2026; a place-time refusal falls
+            # (review accepted it live; a place-time refusal falls
             # back to a daily re-armed "gfd" in the scanner's close50 loop).
             "time_in_force": plan.time_in_force,
         }

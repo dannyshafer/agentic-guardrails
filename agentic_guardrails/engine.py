@@ -186,7 +186,7 @@ class Engine:
         # factor map cannot see that.
         by_expiry = open_collateral_by_expiry(records)
         # Live opens that have not settled still commit collateral: count their
-        # unfilled remainder in every cap scope (the Sep 23 same-tick overshoot).
+        # unfilled remainder in every cap scope (the same-tick overshoot).
         for r, left in inflight_open_remainders(records, exclude=plan.client_order_id):
             c = r.collateral_per_contract() * Decimal(left)
             tk = ticker_of(r.contract_symbol)

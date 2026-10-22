@@ -41,8 +41,7 @@ class OrderIntent(str, enum.Enum):
     STO = "sto"  # sell-to-open a cash-secured put
     BTC = "btc"  # buy-to-close the short put (the 50% target)
     CC = "cc"  # sell-to-open a covered call (the assigned-wheel leg)
-    # Phase 2 (Sep 16 2026): vertical put credit spreads, the capital lever
-    # (docs/findings/2026-09-10_saturn_spreads_capital_year.md). ONE order with
+    # Phase 2: vertical put credit spreads, the capital lever. ONE order with
     # TWO legs: sell the short put, buy the lower-strike wing, for a net credit.
     PCS_OPEN = "pcs_open"  # sell-to-open the vertical (net credit)
     PCS_CLOSE = "pcs_close"  # buy-to-close the vertical (net debit)
@@ -60,7 +59,7 @@ TIME_IN_FORCE: frozenset[str] = frozenset({"gfd", "gtc"})
 # target). Orders carrying it are meant to sit working at the broker for days,
 # so the engine must not cancel them after its settle poll, and one arm's
 # resting close must not block ANOTHER arm's resting close on the same contract
-# (two arms can hold the same put at different credits: NVDL Oct 2 $34P).
+# (two arms can hold the same put at different credits).
 RESTING_TP_RULE = "btc_close50_rest"
 
 

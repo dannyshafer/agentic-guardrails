@@ -7,7 +7,7 @@ Two store implementations behind one small Protocol so the engine is testable wi
 from filled orders (net short quantity per contract), never stored separately, so the ledger cannot
 disagree with itself; the reconciler compares that derivation to the broker's positions read.
 
-Invariants carried from the copy book (CLAUDE.md, Aug 22-24 2026): booked size comes only from the
+Invariants carried from the copy book: booked size comes only from the
 broker-confirmed high-water fill (`OrderView.filled_qty`), an event row is written for EVERY state
 transition with the verbatim broker payload, and a restart re-derives the same client_order_id so
 the ledger row is re-adopted rather than duplicated (`upsert` is keyed on it).
@@ -211,8 +211,8 @@ def inflight_open_remainders(records: list[OrderRecord], *, exclude: str | None 
 
     The collateral caps read FILLED positions, so an open that is reviewed,
     resting, partially filled or UNKNOWN commits nothing to them until it
-    settles. Within one scan tick the loop submits several opens, and on Sep 23
-    2026 the second was judged before the first settled, so the NVDA factor
+    settles. Within one scan tick the loop submits several opens, and once
+    the second was judged before the first settled, so the NVDA factor
     overshot its cap by one order. Counting the unfilled remainder of every placed
     open closes that gap: an order that might still fill is treated as if it
     will. UNKNOWN is included on purpose (it may have filled at the broker).
@@ -231,7 +231,7 @@ def inflight_open_remainders(records: list[OrderRecord], *, exclude: str | None 
 
 def open_collateral_by_expiry(records: list[OrderRecord]) -> dict[date, Decimal]:
     """Open short collateral keyed by expiration date: the input to the expiry
-    concentration cap (Oct 4 2026). Same per-contract collateral as
+    concentration cap. Same per-contract collateral as
     open_collateral (width for a vertical, strike for a cash-secured put), only
     the grouping key differs. A record with no expiration is skipped (it cannot
     be placed on the date axis; the OCC parser refuses such plans anyway)."""

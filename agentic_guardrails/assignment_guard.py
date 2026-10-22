@@ -1,4 +1,4 @@
-"""Assignment-avoidance policy for live short puts (Dan, Sep 10 2026).
+"""Assignment-avoidance policy for live short puts.
 
 HARD REQUIREMENT: a live short option must NEVER be assigned. Dan accepts taking
 a loss to close/roll rather than ever managing an assigned equity position.
@@ -83,23 +83,23 @@ class GuardConfig:
     # positive value acts a touch early for buffer).
     itm_buffer_pct: Decimal = Decimal("0.01")
     # Whether that near-strike trigger fires BEFORE the cutoff at all. OFF by
-    # default (Sep 24 2026): a short put can only be assigned at expiry or when
+    # default: a short put can only be assigned at expiry or when
     # deep ITM with no extrinsic left, and both are covered above/below. Acting
     # on a 1%-from-strike touch with a week to go is a STOP-LOSS, not assignment
-    # avoidance; live it bought back dip200_7dte's NVDX $19.5P at 0.80 (credit
-    # 0.30) on a still-OTM, 8-DTE put. Stops on short premium are a measured
+    # avoidance; live it bought back a still-OTM, 8-DTE wrapper put at several
+    # times its credit. Stops on short premium are a measured
     # closed vein here (copy-book spot-stop, spread stop study): the recovering
     # majority costs more than the tail saves. The cutoff still forces action.
     pre_cutoff_breach: bool = False
-    # ITM inside this many days to expiry: act now (Oct 13 2026, Dan). A put that
+    # ITM inside this many days to expiry: act now. A put that
     # is actually IN the money this close to expiry is an assignment risk, not a
-    # stop-loss decision; waiting for the DTE-2 cutoff left an ITM NVDL $37P
+    # stop-loss decision; waiting for the DTE-2 cutoff left an ITM wrapper put
     # (delta -0.67) on "hold" at 3 DTE. OTM puts are unaffected.
     itm_act_dte: int = 5
     # A roll must not quietly stretch the position far past its original life:
     # only candidates expiring within this many days after the current expiry
     # qualify. Picking the max-credit candidate across the whole chain chose a
-    # contract 5 weeks further out (Oct 2 -> Nov 6) on a 7-10 DTE arm.
+    # contract 5 weeks further out on a 7-10 DTE arm.
     max_roll_extension_days: int = 14
     # Early-assignment trigger: when ITM and extrinsic has decayed to at most this
     # fraction of intrinsic (or is essentially zero), act now regardless of DTE.
@@ -202,7 +202,7 @@ def decide(pos: PositionSnapshot, candidates: list[RollCandidate], today: date, 
                 GuardAction.LET_EXPIRE,
                 f"let expire: dte {dte}, spot {spot} >= strike {strike} x (1+{cfg.safe_otm_pct}), delta safe — worthless expiry, no assignment",
             )
-        # Name the leg that actually failed (Sep 16 2026): on a high-IV wrapper
+        # Name the leg that actually failed: on a high-IV wrapper
         # a 6%-OTM put can carry |delta| 0.20, so the PRICE cushion passes and
         # only the delta gate forces action; the old "not comfortably OTM" text
         # misread that as a price failure. Both legs are deliberately required

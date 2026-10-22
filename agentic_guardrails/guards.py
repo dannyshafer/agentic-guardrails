@@ -51,25 +51,24 @@ class Caps:
     # claims to know how correlated NVDA and the Nasdaq are, cap the book: every
     # name here is long US equity beta, so the total IS the concentration.
     per_portfolio: Decimal | None = None
-    # Ceiling on open collateral that RESOLVES ON ONE EXPIRATION DATE (Oct 4
-    # 2026, Dan). The factor and portfolio caps bound WHAT the book is long of;
+    # Ceiling on open collateral that RESOLVES ON ONE EXPIRATION DATE. The factor and portfolio caps bound WHAT the book is long of;
     # nothing bounded WHEN it resolves. Every armed arm fires into the same
-    # weekly expiry on a scan day, so on Sep 28 2026 83% of the live book
-    # ($9,150 of $11,050) resolved on one Friday: the book's realized P&L was
+    # weekly expiry on a scan day, so one week most of the live book
+    # resolved on one Friday: the book's realized P&L was
     # ~1 independent draw, not ~3 (the copy-book "cluster by round, not by
     # fill" lesson on the expiry axis). This is the date-axis twin of
     # per_factor. None = unbounded.
     per_expiry: Decimal | None = None
-    # Phase 2 spreads (Sep 16 2026): the most OPEN spread contracts one strategy
+    # Phase 2 spreads: the most OPEN spread contracts one strategy
     # may hold at once. The spreads finding's load-bearing sizing rule: a vertical
     # caps the loss per trade and does nothing about how many trades lose at
     # once (QQQ 5%-wing lost full width on 14% of 2022 entries, 26 max losses in
-    # one year), so at $9k the instrument is 3-4 concurrent TQQQ spreads, never
+    # one year), so on a small pool the instrument is 3-4 concurrent TQQQ spreads, never
     # 13. None = unbounded (still bounded by collateral).
     max_open_spreads_per_strategy: int | None = None
     # Smallest net credit a vertical may be opened for, as a fraction of its
     # width. A spread that collects ~nothing relative to the width it risks is
-    # the wrong structure (the 5%-wing TQQQ cell: $0.47 on $3.58, hold +$17).
+    # the wrong structure (the 5%-wing TQQQ cell: a thin credit on a narrow width).
     min_spread_credit_frac: Decimal | None = None
 
 
@@ -203,7 +202,7 @@ def guard_caps(plan: OrderPlan, ctx: ExecContext, caps: Caps) -> GuardResult:
     return ALLOW
 
 
-# ── Factor concentration (Sep 6 2026) ────────────────────────────────────────
+# ── Factor concentration ──────────────────────────────────────────────────────
 # The scanned universe is almost entirely leveraged wrappers on two indices plus
 # a handful of mega-cap single names. Every pick the live track has produced so
 # far (NVDL, AMZU, TQQQ, UPRO) is long tech beta. The per-ticker cap does not
@@ -236,7 +235,7 @@ FACTOR_OF: Mapping[str, str] = {
     # (b) earnings-resolvable to a real underlier by the open loop's provider. A
     # wrapper missing here factors to ITSELF, so its earnings lookup returns None
     # and fails closed — permanently unfundable — which is how NVDX (a 2x NVDA
-    # wrapper the $9k pool can actually afford) sat blocked with the guard unable
+    # wrapper a small pool can actually afford) sat blocked with the guard unable
     # to prove it clear.
     "TSLL": "TSLA",
     "NVDL": "NVDA",
@@ -244,7 +243,7 @@ FACTOR_OF: Mapping[str, str] = {
     "AAPU": "AAPL",
     "AMZU": "AMZN",
     "GGLL": "GOOGL",
-    # Commodity fund (Oct 19 2026): crude oil futures, no earnings calendar. Mapped
+    # Commodity fund: crude oil futures, no earnings calendar. Mapped
     # so the earnings guard reads it as event-free instead of an unreadable single
     # name (it failed closed on every USO open), and so it is its own factor.
     "USO": "OIL",
@@ -337,7 +336,7 @@ def guard_portfolio_concentration(plan: OrderPlan, ctx: ExecContext, caps: Caps)
     return ALLOW
 
 
-# ── Earnings in window (Sep 6 2026) ──────────────────────────────────────────
+# ── Earnings in window ────────────────────────────────────────────────────────
 # The threshold checker already ALERTS when a tracked position has earnings
 # inside its remaining window, but nothing stopped the position being opened
 # that way in the first place. An alert after the fact is not a control: by then
@@ -369,7 +368,7 @@ def guard_no_earnings_in_window(plan: OrderPlan, ctx: ExecContext, caps: Caps) -
     return ALLOW
 
 
-# ── Vertical spreads (Phase 2, Sep 16 2026) ──────────────────────────────────
+# ── Vertical spreads (Phase 2) ────────────────────────────────────────────────
 def guard_spread_structure(plan: OrderPlan, ctx: ExecContext, caps: Caps) -> GuardResult:
     """A spread plan must be a well-formed put credit spread: a wing strictly
     below the short on the SAME underlying and expiration, a net credit below
