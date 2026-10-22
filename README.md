@@ -54,12 +54,14 @@ The short version, grouped by who is likely to hit the same thing:
 | A near-strike rule that was a stop-loss in disguise, and bought back healthy puts | the assignment guard acts at two days to expiry or on no extrinsic value, never on proximity; open-side sanity floors |
 | A take-profit that was really a poll | resting GTC closes; the guard cancels resting closes before placing its own |
 
-**If you build on Robinhood's agent endpoint, you will meet these on day one:**
+**If you build on Robinhood's agent endpoint, you will meet this on day one:**
 
 | incident | the control it produced |
 |---|---|
 | The first fill the ledger never saw: a singular response where the parser expected a list | dict-valued keys parse as one record; UNKNOWN state; the reconciler reads positions, not orders |
-| Mixed types in the order body and an order id format that changed without notice | the adapter owns the wire form; the read-only check proves the surface before any order |
+
+The id-format change above also happened on this endpoint, and the order body's mixed typing is
+handled in the adapter; the read-only check proves the whole surface before any order goes out.
 
 The thing all nine have in common: a control is only real when it is wired to its real inputs,
 asked the right question, and run often enough for whatever reads it. That is the checklist.
