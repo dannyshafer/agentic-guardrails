@@ -22,3 +22,15 @@ packages = ["agentic_guardrails", "agentic_guardrails.runtime", "agentic_guardra
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py312"
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501", "E402", "F811", "F841"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F401"]
